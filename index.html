@@ -1,0 +1,1837 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ScamShield India — 1-Tap Fraud, Fake Link & UPI Scam Detector</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Font: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Base dark cyber background with subtle radial security aura */
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background-color: #060a14;
+            background-image:
+                radial-gradient(circle at 15% 10%, rgba(14, 165, 233, 0.14), transparent 40%),
+                radial-gradient(circle at 85% 15%, rgba(16, 185, 129, 0.10), transparent 38%),
+                radial-gradient(circle at 50% 90%, rgba(239, 68, 68, 0.08), transparent 45%);
+            min-height: 100vh;
+            color: #f1f5f9;
+            overflow-x: hidden;
+        }
+
+        /* Crisp glassmorphic cards */
+        .glass-card {
+            background: rgba(15, 23, 42, 0.78);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+        }
+
+        /* Smooth circular gauge progress animation */
+        .gauge-ring {
+            transition: stroke-dashoffset 1s cubic-bezier(0.22, 1, 0.36, 1), stroke 0.4s ease;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+
+        /* Subtle scanning shimmer bar */
+        @keyframes scanSlide {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(250%); }
+        }
+        .scan-bar::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            width: 45%;
+            background: linear-gradient(90deg, transparent, rgba(56, 189, 248, 0.55), transparent);
+            animation: scanSlide 1.3s ease-in-out infinite;
+        }
+
+        /* Voice speaking wave pulse */
+        @keyframes voicePulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.55); }
+            50% { box-shadow: 0 0 0 12px rgba(56, 189, 248, 0); }
+        }
+        .voice-active {
+            animation: voicePulse 1.4s infinite;
+        }
+
+        /* Custom subtle scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(100, 116, 139, 0.45);
+            border-radius: 999px;
+        }
+    </style>
+</head>
+<body class="antialiased selection:bg-sky-500/30 selection:text-sky-200 pb-14">
+
+    <!-- Toast Notification Banner (No alert() used anywhere) -->
+    <div id="toast" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 hidden items-center gap-2.5 bg-slate-900/95 border border-sky-500/50 text-slate-100 px-4 py-3 rounded-2xl shadow-2xl text-sm font-medium max-w-[92vw]">
+        <span id="toast-icon">ℹ️</span>
+        <span id="toast-msg">Notification</span>
+    </div>
+
+    <!-- Top Sticky Header -->
+    <header class="sticky top-0 z-30 bg-slate-950/85 backdrop-blur-xl border-b border-slate-800/80">
+        <div class="max-w-4xl mx-auto px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+            <!-- Logo & Subtitle -->
+            <div class="flex items-center gap-3 min-w-0">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-sky-500/25 to-emerald-500/20 border border-sky-400/35 flex items-center justify-center text-2xl shadow-lg shadow-sky-500/10 shrink-0">
+                    🛡️
+                </div>
+                <div class="min-w-0">
+                    <h1 class="text-lg sm:text-xl font-extrabold tracking-tight text-white leading-tight truncate">
+                        ScamShield <span class="text-sky-400">India</span>
+                    </h1>
+                    <p class="text-[11px] sm:text-xs text-slate-400 font-medium truncate">
+                        Instant SMS, Link, UPI &amp; Screenshot Fraud Detector
+                    </p>
+                </div>
+            </div>
+
+            <!-- Right Controls: Language Toggle & 1930 Emergency Helpline -->
+            <div class="flex items-center gap-2 sm:gap-2.5 ml-auto">
+                <!-- Language Segmented Toggle -->
+                <div class="inline-flex items-center bg-slate-900 border border-slate-700/80 rounded-xl p-1" role="group" aria-label="Language toggle">
+                    <button
+                        id="lang-hi-btn"
+                        type="button"
+                        class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-sky-500 text-slate-950 shadow-sm cursor-pointer"
+                    >
+                        Hinglish
+                    </button>
+                    <button
+                        id="lang-en-btn"
+                        type="button"
+                        class="px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-300 hover:text-white cursor-pointer"
+                    >
+                        English
+                    </button>
+                </div>
+
+                <!-- 1930 Emergency Helpline Badge -->
+                <button
+                    id="helpline-open-btn"
+                    type="button"
+                    class="flex items-center gap-1.5 bg-red-500/15 hover:bg-red-500/25 border border-red-500/45 text-red-300 hover:text-red-200 px-3 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all active:scale-95 cursor-pointer shrink-0"
+                >
+                    <span>📞</span>
+                    <span>1930 Helpline</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-4xl mx-auto px-4 pt-5 sm:pt-7 space-y-6">
+
+        <!-- Hero Trust Strip -->
+        <section class="flex flex-wrap items-center justify-between gap-2 bg-slate-900/55 border border-slate-800/80 rounded-2xl px-4 py-3 text-xs sm:text-sm text-slate-300">
+            <div class="flex items-center gap-2">
+                <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span id="hero-tagline">Koi bhi suspicious SMS, WhatsApp, Link ya UPI PIN message paste karein — 2 second me sach jaanein!</span>
+            </div>
+            <span class="text-[11px] font-semibold text-sky-400 bg-sky-500/10 border border-sky-500/25 px-2.5 py-1 rounded-full shrink-0">
+                🔒 100% Free &amp; Private
+            </span>
+        </section>
+
+        <!-- Main Scanner Card -->
+        <section class="glass-card rounded-3xl p-4 sm:p-6 shadow-2xl">
+            <!-- Three Input Tabs -->
+            <div class="grid grid-cols-3 gap-2 bg-slate-950/75 p-1.5 rounded-2xl border border-slate-800 mb-5" role="tablist">
+                <button
+                    id="tab-btn-message"
+                    data-tab="message"
+                    type="button"
+                    role="tab"
+                    aria-selected="true"
+                    class="tab-btn flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-sky-500 text-slate-950 shadow-md cursor-pointer"
+                >
+                    <span class="text-base">💬</span>
+                    <span>Message / SMS</span>
+                </button>
+                <button
+                    id="tab-btn-link"
+                    data-tab="link"
+                    type="button"
+                    role="tab"
+                    aria-selected="false"
+                    class="tab-btn flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-300 hover:bg-slate-800/70 hover:text-white cursor-pointer"
+                >
+                    <span class="text-base">🔗</span>
+                    <span>Link / UPI URL</span>
+                </button>
+                <button
+                    id="tab-btn-screenshot"
+                    data-tab="screenshot"
+                    type="button"
+                    role="tab"
+                    aria-selected="false"
+                    class="tab-btn flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-300 hover:bg-slate-800/70 hover:text-white cursor-pointer"
+                >
+                    <span class="text-base">📸</span>
+                    <span>Screenshot Check</span>
+                </button>
+            </div>
+
+            <!-- TAB 1: Message / SMS Input -->
+            <div id="panel-message" class="tab-panel space-y-4">
+                <div class="flex items-center justify-between gap-2">
+                    <label for="msg-input" class="text-sm font-bold text-slate-200">
+                        Suspicious Message / WhatsApp / Email Paste Karein:
+                    </label>
+                    <button
+                        id="clear-msg-btn"
+                        type="button"
+                        class="text-xs font-semibold text-slate-400 hover:text-red-400 transition-colors cursor-pointer px-2 py-1 rounded-lg hover:bg-slate-800/60"
+                    >
+                        ✕ Clear
+                    </button>
+                </div>
+
+                <textarea
+                    id="msg-input"
+                    rows="5"
+                    placeholder="Yahan SMS, WhatsApp message, ya email paste karein... (Example: Bijli bill disconnect notice, Bank KYC update, UPI cashback, e-Challan APK...)"
+                    class="w-full rounded-2xl bg-slate-950/90 border border-slate-700/80 focus:border-sky-400 focus:ring-2 focus:ring-sky-500/25 p-4 text-sm sm:text-base text-slate-100 placeholder-slate-500 outline-none transition-all resize-y leading-relaxed"
+                ></textarea>
+
+                <!-- 5 One-Tap Quick Test Chips -->
+                <div class="space-y-2">
+                    <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                        ⚡ 1-Tap Quick Demo Samples (Turant Test Karein):
+                    </p>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" data-sample="bijli" class="sample-chip bg-slate-800/85 hover:bg-red-500/20 border border-slate-700 hover:border-red-400/50 text-slate-200 px-3 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 cursor-pointer">
+                            ⚡ Fake Bijli Bill
+                        </button>
+                        <button type="button" data-sample="upi" class="sample-chip bg-slate-800/85 hover:bg-red-500/20 border border-slate-700 hover:border-red-400/50 text-slate-200 px-3 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 cursor-pointer">
+                            💸 UPI Cashback Trap
+                        </button>
+                        <button type="button" data-sample="kyc" class="sample-chip bg-slate-800/85 hover:bg-red-500/20 border border-slate-700 hover:border-red-400/50 text-slate-200 px-3 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 cursor-pointer">
+                            🏦 Bank KYC Block
+                        </button>
+                        <button type="button" data-sample="challan" class="sample-chip bg-slate-800/85 hover:bg-red-500/20 border border-slate-700 hover:border-red-400/50 text-slate-200 px-3 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 cursor-pointer">
+                            🚨 Fake Challan / APK
+                        </button>
+                        <button type="button" data-sample="genuine" class="sample-chip bg-slate-800/85 hover:bg-emerald-500/20 border border-slate-700 hover:border-emerald-400/50 text-emerald-200 px-3 py-2 rounded-xl text-xs font-semibold transition-all active:scale-95 cursor-pointer">
+                            ✅ Genuine Bank Alert
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: Link / UPI URL Inspector -->
+            <div id="panel-link" class="tab-panel hidden space-y-4">
+                <div class="flex items-center justify-between gap-2">
+                    <label for="url-input" class="text-sm font-bold text-slate-200">
+                        Website Link ya UPI Payment URL Paste Karein:
+                    </label>
+                    <button
+                        id="clear-url-btn"
+                        type="button"
+                        class="text-xs font-semibold text-slate-400 hover:text-red-400 transition-colors cursor-pointer px-2 py-1 rounded-lg hover:bg-slate-800/60"
+                    >
+                        ✕ Clear
+                    </button>
+                </div>
+
+                <input
+                    id="url-input"
+                    type="text"
+                    placeholder="e.g., http://sbi-kyc-update.xyz ya upi://pay?pa=rewardclaim@okaxis&am=4999"
+                    autocomplete="off"
+                    class="w-full rounded-2xl bg-slate-950/90 border border-slate-700/80 focus:border-sky-400 focus:ring-2 focus:ring-sky-500/25 px-4 py-3.5 text-sm sm:text-base text-slate-100 placeholder-slate-500 outline-none transition-all font-mono"
+                />
+
+                <!-- Quick URL Test Chips -->
+                <div class="flex flex-wrap gap-2">
+                    <button type="button" data-url-sample="http://sbi-yono-kyc-verify.xyz/login" class="url-sample-chip bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer">
+                        🔗 Fake SBI Link
+                    </button>
+                    <button type="button" data-url-sample="upi://pay?pa=cashbackclaim@okaxis&pn=PaytmReward&am=4999" class="url-sample-chip bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer">
+                        💸 UPI Payment Trap
+                    </button>
+                    <button type="button" data-url-sample="https://bit.ly/parivahan-challan-apk" class="url-sample-chip bg-slate-800/80 hover:bg-slate-700 border border-slate-700 text-slate-200 px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer">
+                        🔗 Shortened Challan Link
+                    </button>
+                    <button type="button" data-url-sample="https://cybercrime.gov.in/" class="url-sample-chip bg-slate-800/80 hover:bg-emerald-500/20 border border-slate-700 text-emerald-200 px-3 py-1.5 rounded-xl text-xs font-semibold cursor-pointer">
+                        ✅ Official Gov Link
+                    </button>
+                </div>
+
+                <!-- Live Instant Domain & UPI Breakdown Panel -->
+                <div id="live-url-breakdown" class="hidden rounded-2xl bg-slate-950/85 border border-slate-800 p-4 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-xs font-extrabold uppercase tracking-wider text-sky-400">
+                            🔬 Live Link / UPI Inspector
+                        </h3>
+                        <span id="live-url-type-badge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-800 text-slate-300">
+                            URL
+                        </span>
+                    </div>
+                    <div id="live-url-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                        <!-- Dynamically populated by JS -->
+                    </div>
+                    <div id="live-upi-warning" class="hidden rounded-xl bg-red-500/15 border border-red-500/40 p-3 text-xs text-red-200 font-semibold leading-relaxed">
+                        <!-- Dynamically populated for UPI links -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 3: Screenshot Upload Check -->
+            <div id="panel-screenshot" class="tab-panel hidden space-y-4">
+                <div
+                    id="drop-zone"
+                    class="relative border-2 border-dashed border-slate-700 hover:border-sky-400 bg-slate-950/60 hover:bg-slate-900/70 rounded-2xl p-6 sm:p-8 text-center transition-all cursor-pointer"
+                >
+                    <input
+                        id="file-input"
+                        type="file"
+                        accept="image/*"
+                        class="hidden"
+                    />
+                    <div id="drop-placeholder" class="space-y-2.5">
+                        <div class="w-14 h-14 mx-auto rounded-2xl bg-sky-500/15 border border-sky-400/30 flex items-center justify-center text-3xl">
+                            📸
+                        </div>
+                        <p class="text-sm sm:text-base font-bold text-slate-100">
+                            Screenshot Upload Karein (SMS, WhatsApp, QR ya Payment Screen)
+                        </p>
+                        <p class="text-xs text-slate-400">
+                            Tap to choose photo ya image yahan drag &amp; drop karein (PNG, JPG, WEBP)
+                        </p>
+                    </div>
+
+                    <!-- Image Preview Container -->
+                    <div id="preview-wrapper" class="hidden space-y-3">
+                        <div class="relative inline-block max-w-full">
+                            <img
+                                id="screenshot-preview"
+                                src=""
+                                alt="Uploaded screenshot preview"
+                                class="max-h-64 w-auto mx-auto rounded-xl border border-slate-700 shadow-lg object-contain"
+                            />
+                        </div>
+                        <div class="flex flex-wrap items-center justify-center gap-3 text-xs">
+                            <span id="file-meta" class="text-slate-300 font-medium bg-slate-800 px-3 py-1 rounded-full"></span>
+                            <button
+                                id="remove-image-btn"
+                                type="button"
+                                class="text-red-300 hover:text-red-200 bg-red-500/15 hover:bg-red-500/25 border border-red-500/35 px-3 py-1 rounded-full font-bold cursor-pointer"
+                            >
+                                🗑️ Remove Photo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Primary Scan CTA Button -->
+            <div class="mt-5">
+                <button
+                    id="scan-btn"
+                    type="button"
+                    class="relative overflow-hidden w-full py-4 px-6 rounded-2xl bg-gradient-to-r from-sky-500 via-blue-500 to-indigo-500 hover:from-sky-400 hover:via-blue-400 hover:to-indigo-400 active:scale-[0.99] text-white font-extrabold text-base sm:text-lg shadow-xl shadow-sky-500/25 transition-all flex items-center justify-center gap-2.5 cursor-pointer"
+                >
+                    <span id="scan-btn-icon" class="text-xl">🔍</span>
+                    <span id="scan-btn-text">Scan Now (Check Fraud)</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Rich Verdict Result Card -->
+        <section id="result-section" class="hidden glass-card rounded-3xl overflow-hidden shadow-2xl border-2 transition-colors">
+            <!-- Top Verdict Banner -->
+            <div id="verdict-banner" class="px-5 py-4 flex flex-wrap items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <span id="verdict-emoji" class="text-3xl">🚨</span>
+                    <div>
+                        <h2 id="verdict-title" class="text-lg sm:text-2xl font-black tracking-tight text-white">
+                            KHATRA: HIGH RISK SCAM!
+                        </h2>
+                        <div class="flex flex-wrap items-center gap-2 mt-1">
+                            <span id="scam-category-pill" class="inline-block text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-black/30 text-white border border-white/20">
+                                Scam Category
+                            </span>
+                            <span id="engine-source-pill" class="inline-block text-[11px] font-semibold px-2 py-0.5 rounded-full bg-black/25 text-white/85">
+                                Hybrid Engine
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Result Body -->
+            <div class="p-5 sm:p-6 space-y-6">
+                <!-- Risk Meter + Plain Language Summary -->
+                <div class="flex flex-col sm:flex-row items-center gap-5 bg-slate-950/65 border border-slate-800 rounded-2xl p-4 sm:p-5">
+                    <!-- Animated Circular SVG Risk Meter -->
+                    <div class="relative w-32 h-32 shrink-0 flex items-center justify-center">
+                        <svg class="w-32 h-32" viewBox="0 0 120 120">
+                            <circle
+                                cx="60"
+                                cy="60"
+                                r="50"
+                                fill="none"
+                                stroke="rgba(148, 163, 184, 0.16)"
+                                stroke-width="11"
+                            />
+                            <circle
+                                id="gauge-circle"
+                                class="gauge-ring"
+                                cx="60"
+                                cy="60"
+                                r="50"
+                                fill="none"
+                                stroke="#ef4444"
+                                stroke-width="11"
+                                stroke-linecap="round"
+                                stroke-dasharray="314.16"
+                                stroke-dashoffset="314.16"
+                            />
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                            <span id="risk-score-num" class="text-3xl font-black tabular-nums text-white">0%</span>
+                            <span class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Risk Score</span>
+                        </div>
+                    </div>
+
+                    <!-- Summary + Prominent Voice Alert Button -->
+                    <div class="flex-1 text-center sm:text-left space-y-3.5 w-full">
+                        <p id="result-summary" class="text-sm sm:text-base text-slate-100 leading-relaxed font-medium">
+                            Summary will appear here.
+                        </p>
+
+                        <!-- Big Accessible Voice Alert Button for Parents & Elders -->
+                        <button
+                            id="voice-alert-btn"
+                            type="button"
+                            class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 bg-sky-500/20 hover:bg-sky-500/30 border-2 border-sky-400/60 text-sky-200 hover:text-white font-extrabold text-sm sm:text-base px-5 py-3 rounded-2xl transition-all active:scale-95 cursor-pointer"
+                        >
+                            <span id="voice-btn-icon" class="text-xl">🔊</span>
+                            <span id="voice-btn-label">Awaaz Me Suno (Voice Alert)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Emergency Red Banner (Shown when High Danger >= 60) -->
+                <div id="danger-emergency-banner" class="hidden rounded-2xl bg-red-600/20 border-2 border-red-500/60 p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div class="flex items-start gap-3">
+                        <span class="text-2xl shrink-0">🆘</span>
+                        <p id="emergency-banner-text" class="text-xs sm:text-sm text-red-100 font-bold leading-relaxed">
+                            Kya paise kat gaye ya link khol diya? Turant 1930 par call karein ya cybercrime.gov.in par report karein.
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2 shrink-0 w-full sm:w-auto">
+                        <a
+                            href="tel:1930"
+                            class="flex-1 sm:flex-none text-center bg-red-600 hover:bg-red-500 text-white font-extrabold text-xs px-3.5 py-2.5 rounded-xl transition-colors"
+                        >
+                            📞 Call 1930
+                        </a>
+                        <button
+                            id="banner-guide-btn"
+                            type="button"
+                            class="flex-1 sm:flex-none bg-slate-900/90 hover:bg-slate-800 border border-red-400/40 text-red-200 font-bold text-xs px-3.5 py-2.5 rounded-xl cursor-pointer"
+                        >
+                            Report Steps
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Two Columns: Red Flags & Safety Checklist -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Red Flags List -->
+                    <div class="rounded-2xl bg-slate-950/65 border border-slate-800 p-4 space-y-3">
+                        <h3 id="flags-heading" class="text-sm font-extrabold text-rose-400 flex items-center gap-2">
+                            <span>🚩</span>
+                            <span>Pakde Gaye Red Flags</span>
+                        </h3>
+                        <ul id="red-flags-list" class="space-y-2 text-xs sm:text-sm text-slate-200">
+                            <!-- Populated dynamically -->
+                        </ul>
+                    </div>
+
+                    <!-- Safety Checklist -->
+                    <div class="rounded-2xl bg-slate-950/65 border border-slate-800 p-4 space-y-3">
+                        <h3 id="safety-heading" class="text-sm font-extrabold text-emerald-400 flex items-center gap-2">
+                            <span>✅</span>
+                            <span>Aage Kya Karein (Safety Checklist)</span>
+                        </h3>
+                        <ul id="safety-steps-list" class="space-y-2 text-xs sm:text-sm text-slate-200">
+                            <!-- Populated dynamically -->
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Share Warning Action Bar -->
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1">
+                    <button
+                        id="whatsapp-share-btn"
+                        type="button"
+                        class="flex-1 flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-500 active:scale-[0.99] text-white font-extrabold text-sm py-3.5 px-5 rounded-2xl shadow-lg shadow-emerald-600/20 transition-all cursor-pointer"
+                    >
+                        <span class="text-lg">📲</span>
+                        <span>Family Group Me Alert Bhejein (WhatsApp Share)</span>
+                    </button>
+                    <button
+                        id="copy-alert-btn"
+                        type="button"
+                        class="flex items-center justify-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-100 font-bold text-sm py-3.5 px-5 rounded-2xl transition-all active:scale-[0.99] cursor-pointer"
+                    >
+                        <span>📋</span>
+                        <span>Copy Alert</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Local Scan History Section -->
+        <section class="glass-card rounded-3xl p-4 sm:p-6 shadow-xl space-y-4">
+            <div class="flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2">
+                    <span class="text-lg">🕒</span>
+                    <h2 class="text-sm sm:text-base font-extrabold text-slate-100">
+                        Recent Scan History <span class="text-xs font-medium text-slate-400">(Saved on your device)</span>
+                    </h2>
+                </div>
+                <button
+                    id="clear-history-btn"
+                    type="button"
+                    class="text-xs font-bold text-slate-400 hover:text-red-400 bg-slate-900/80 hover:bg-red-500/10 border border-slate-800 px-3 py-1.5 rounded-xl transition-all cursor-pointer"
+                >
+                    Clear History
+                </button>
+            </div>
+
+            <div id="history-list" class="space-y-2.5">
+                <!-- Populated dynamically from localStorage -->
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 1930 Cybercrime Emergency Helpline Modal -->
+    <div id="helpline-modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+        <div class="glass-card border border-red-500/40 rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2.5">
+                    <span class="text-2xl">🚨</span>
+                    <div>
+                        <h2 class="text-lg font-black text-white">Cybercrime Emergency Help</h2>
+                        <p class="text-xs text-red-300 font-semibold">National Cyber Crime Helpline — India</p>
+                    </div>
+                </div>
+                <button
+                    id="helpline-close-btn"
+                    type="button"
+                    class="w-9 h-9 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-bold flex items-center justify-center cursor-pointer"
+                    aria-label="Close modal"
+                >
+                    ✕
+                </button>
+            </div>
+
+            <!-- Helpline Number Highlight Box -->
+            <div class="rounded-2xl bg-red-500/15 border border-red-500/40 p-4 flex flex-col sm:flex-row items-center justify-between gap-3">
+                <div class="text-center sm:text-left">
+                    <p class="text-xs uppercase font-bold tracking-wider text-red-300">24×7 Toll-Free Helpline</p>
+                    <p class="text-3xl font-black text-white tracking-wider">1930</p>
+                </div>
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <a
+                        href="tel:1930"
+                        class="flex-1 sm:flex-none text-center bg-red-600 hover:bg-red-500 text-white font-extrabold text-sm px-4 py-2.5 rounded-xl transition-colors"
+                    >
+                        📞 Call Now
+                    </a>
+                    <button
+                        id="copy-1930-btn"
+                        type="button"
+                        class="flex-1 sm:flex-none bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-200 font-bold text-sm px-4 py-2.5 rounded-xl cursor-pointer"
+                    >
+                        📋 Copy
+                    </button>
+                </div>
+            </div>
+
+            <!-- Official Portal Box -->
+            <div class="rounded-2xl bg-slate-950/80 border border-slate-800 p-4 flex items-center justify-between gap-3">
+                <div>
+                    <p class="text-xs text-slate-400 font-semibold">Official Govt Reporting Portal</p>
+                    <p class="text-sm sm:text-base font-extrabold text-sky-400">https://cybercrime.gov.in</p>
+                </div>
+                <a
+                    href="https://cybercrime.gov.in"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/40 text-sky-300 font-bold text-xs px-3.5 py-2 rounded-xl shrink-0"
+                >
+                    Open Site ↗
+                </a>
+            </div>
+
+            <!-- Immediate Golden Hour Steps -->
+            <div class="space-y-2.5">
+                <h3 class="text-sm font-extrabold text-amber-300">
+                    ⏱️ Agar Paise Kat Gaye Hain, Turant Ye 4 Kaam Karein:
+                </h3>
+                <ol class="space-y-2 text-xs sm:text-sm text-slate-200 list-decimal list-inside leading-relaxed">
+                    <li><strong>Pehle 1–2 ghante (Golden Hour) me 1930 par call karein</strong> taaki fraudster ka bank account turant freeze ho sake.</li>
+                    <li><strong>Apne bank customer care / app</strong> se debit card, UPI aur netbanking temporarily block karwayein.</li>
+                    <li>Agar galti se koi <strong>.APK file install</strong> ho gayi hai, toh turant phone ka <strong>Internet/Wi-Fi band karein</strong> aur us app ko uninstall karein.</li>
+                    <li>Transaction ID (UTR), scammer ka phone number, aur SMS/WhatsApp ke <strong>screenshots save</strong> karke <strong>cybercrime.gov.in</strong> par complaint darj karein.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        // SCAMSHIELD INDIA — CORE STATE & CONFIGURATION
+        // ============================================================
+        const apiKey = ""; // Canvas provides runtime Gemini API key automatically when left empty
+        const GEMINI_MODEL = "gemini-3-flash-preview";
+        const HISTORY_KEY = "scamshield_india_history_v1";
+
+        let currentLang = "hi"; // 'hi' (Hinglish/Hindi) or 'en' (English)
+        let activeTab = "message"; // 'message' | 'link' | 'screenshot'
+        let uploadedImageBase64 = null;
+        let uploadedImageMime = null;
+        let uploadedFileName = "";
+        let lastResult = null;
+        let isSpeaking = false;
+
+        // Pre-configured 1-Tap Quick Demo Samples
+        const DEMO_SAMPLES = {
+            bijli: "Dear Consumer your electricity power will be disconnected tonight at 9:30 PM because your previous month bill was not updated. Immediately call our officer 9876543210 or click http://bijli-update-pay.xyz",
+            upi: "Congratulations! You won Rs 4,999 Paytm/PhonePe Cashback. Click upi://pay?pa=rewardclaim@okaxis&am=4999 and enter your UPI PIN to receive money in bank instantly.",
+            kyc: "Dear SBI User, your YONO account will be suspended today. Update your PAN KYC immediately here: https://bit.ly/sbi-kyc-urgent-2026 else account blocked.",
+            challan: "e-Challan Notice: Your vehicle has pending Rs 2000 traffic fine. Download Parivahan_Challan_View.apk immediately to check photo and avoid court notice.",
+            genuine: "Your A/c XX4821 is debited for Rs. 250.00 on 21-Nov-26 via UPI. If not done by you, call official bank toll-free number on back of your card. Do not share OTP."
+        };
+
+        // DOM Elements
+        const langHiBtn = document.getElementById("lang-hi-btn");
+        const langEnBtn = document.getElementById("lang-en-btn");
+        const heroTagline = document.getElementById("hero-tagline");
+        const tabBtns = document.querySelectorAll(".tab-btn");
+        const tabPanels = {
+            message: document.getElementById("panel-message"),
+            link: document.getElementById("panel-link"),
+            screenshot: document.getElementById("panel-screenshot")
+        };
+
+        const msgInput = document.getElementById("msg-input");
+        const clearMsgBtn = document.getElementById("clear-msg-btn");
+        const urlInput = document.getElementById("url-input");
+        const clearUrlBtn = document.getElementById("clear-url-btn");
+        const liveUrlBreakdown = document.getElementById("live-url-breakdown");
+        const liveUrlTypeBadge = document.getElementById("live-url-type-badge");
+        const liveUrlGrid = document.getElementById("live-url-grid");
+        const liveUpiWarning = document.getElementById("live-upi-warning");
+
+        const dropZone = document.getElementById("drop-zone");
+        const fileInput = document.getElementById("file-input");
+        const dropPlaceholder = document.getElementById("drop-placeholder");
+        const previewWrapper = document.getElementById("preview-wrapper");
+        const screenshotPreview = document.getElementById("screenshot-preview");
+        const fileMeta = document.getElementById("file-meta");
+        const removeImageBtn = document.getElementById("remove-image-btn");
+
+        const scanBtn = document.getElementById("scan-btn");
+        const scanBtnIcon = document.getElementById("scan-btn-icon");
+        const scanBtnText = document.getElementById("scan-btn-text");
+
+        const resultSection = document.getElementById("result-section");
+        const verdictBanner = document.getElementById("verdict-banner");
+        const verdictEmoji = document.getElementById("verdict-emoji");
+        const verdictTitle = document.getElementById("verdict-title");
+        const scamCategoryPill = document.getElementById("scam-category-pill");
+        const engineSourcePill = document.getElementById("engine-source-pill");
+        const gaugeCircle = document.getElementById("gauge-circle");
+        const riskScoreNum = document.getElementById("risk-score-num");
+        const resultSummary = document.getElementById("result-summary");
+        const voiceAlertBtn = document.getElementById("voice-alert-btn");
+        const voiceBtnIcon = document.getElementById("voice-btn-icon");
+        const voiceBtnLabel = document.getElementById("voice-btn-label");
+        const dangerEmergencyBanner = document.getElementById("danger-emergency-banner");
+        const emergencyBannerText = document.getElementById("emergency-banner-text");
+        const flagsHeading = document.getElementById("flags-heading");
+        const safetyHeading = document.getElementById("safety-heading");
+        const redFlagsList = document.getElementById("red-flags-list");
+        const safetyStepsList = document.getElementById("safety-steps-list");
+        const whatsappShareBtn = document.getElementById("whatsapp-share-btn");
+        const copyAlertBtn = document.getElementById("copy-alert-btn");
+
+        const historyList = document.getElementById("history-list");
+        const clearHistoryBtn = document.getElementById("clear-history-btn");
+
+        const helplineModal = document.getElementById("helpline-modal");
+        const helplineOpenBtn = document.getElementById("helpline-open-btn");
+        const helplineCloseBtn = document.getElementById("helpline-close-btn");
+        const bannerGuideBtn = document.getElementById("banner-guide-btn");
+        const copy1930Btn = document.getElementById("copy-1930-btn");
+
+        const toast = document.getElementById("toast");
+        const toastIcon = document.getElementById("toast-icon");
+        const toastMsg = document.getElementById("toast-msg");
+        let toastTimer = null;
+
+        // ============================================================
+        // UTILITIES: TOAST & IFRAME-SAFE CLIPBOARD COPY
+        // ============================================================
+        function showToast(message, icon = "ℹ️") {
+            toastIcon.textContent = icon;
+            toastMsg.textContent = message;
+            toast.classList.remove("hidden");
+            toast.classList.add("flex");
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                toast.classList.add("hidden");
+                toast.classList.remove("flex");
+            }, 3000);
+        }
+
+        function copyTextToClipboard(text) {
+            try {
+                const ta = document.createElement("textarea");
+                ta.value = text;
+                ta.style.position = "fixed";
+                ta.style.top = "-9999px";
+                ta.style.left = "-9999px";
+                document.body.appendChild(ta);
+                ta.focus();
+                ta.select();
+                const ok = document.execCommand("copy");
+                document.body.removeChild(ta);
+                return ok;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        // ============================================================
+        // LANGUAGE TOGGLE & VOICE SPEECH SYNTHESIS
+        // ============================================================
+        function stopVoice() {
+            try {
+                if ("speechSynthesis" in window) {
+                    window.speechSynthesis.cancel();
+                }
+            } catch (e) {}
+            isSpeaking = false;
+            voiceAlertBtn.classList.remove("voice-active", "bg-red-500/25", "border-red-400");
+            voiceAlertBtn.classList.add("bg-sky-500/20", "border-sky-400/60");
+            voiceBtnIcon.textContent = "🔊";
+            voiceBtnLabel.textContent = currentLang === "hi"
+                ? "Awaaz Me Suno (Voice Alert)"
+                : "Listen Aloud (Voice Alert)";
+        }
+
+        function updateLanguageUI() {
+            stopVoice();
+            if (currentLang === "hi") {
+                langHiBtn.className = "px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-sky-500 text-slate-950 shadow-sm cursor-pointer";
+                langEnBtn.className = "px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-300 hover:text-white cursor-pointer";
+                heroTagline.textContent = "Koi bhi suspicious SMS, WhatsApp, Link ya UPI PIN message paste karein — 2 second me sach jaanein!";
+                emergencyBannerText.textContent = "Kya paise kat gaye ya link khol diya? Turant 1930 par call karein ya cybercrime.gov.in par report karein.";
+                voiceBtnLabel.textContent = "Awaaz Me Suno (Voice Alert)";
+            } else {
+                langEnBtn.className = "px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all bg-sky-500 text-slate-950 shadow-sm cursor-pointer";
+                langHiBtn.className = "px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-300 hover:text-white cursor-pointer";
+                heroTagline.textContent = "Paste any suspicious SMS, WhatsApp text, Link, or UPI URL — verify fraud risk instantly!";
+                emergencyBannerText.textContent = "Lost money or clicked a malicious link? Call 1930 immediately or report at cybercrime.gov.in.";
+                voiceBtnLabel.textContent = "Listen Aloud (Voice Alert)";
+            }
+
+            // Re-render current result card in newly selected language
+            if (lastResult) {
+                renderResultCard(lastResult, false);
+            }
+        }
+
+        langHiBtn.addEventListener("click", () => {
+            currentLang = "hi";
+            updateLanguageUI();
+        });
+
+        langEnBtn.addEventListener("click", () => {
+            currentLang = "en";
+            updateLanguageUI();
+        });
+
+        function speakResult() {
+            if (!lastResult) return;
+            if (isSpeaking) {
+                stopVoice();
+                return;
+            }
+            if (!("speechSynthesis" in window)) {
+                showToast("Voice speech is not supported in this browser.", "🔇");
+                return;
+            }
+
+            try {
+                window.speechSynthesis.cancel();
+                const isHi = currentLang === "hi";
+                let prefix = "";
+                if (lastResult.verdict === "DANGER") {
+                    prefix = isHi ? "Khatra! Ye High Risk Scam hai. " : "Danger! High risk scam detected. ";
+                } else if (lastResult.verdict === "CAUTION") {
+                    prefix = isHi ? "Savdhan! Ye message suspicious lag raha hai. " : "Caution! This looks suspicious. ";
+                } else {
+                    prefix = isHi ? "Ye safe lag raha hai. " : "This looks safe. ";
+                }
+
+                const summaryText = isHi ? lastResult.summaryHi : lastResult.summaryEn;
+                const firstStep = lastResult.safetySteps && lastResult.safetySteps.length > 0
+                    ? (isHi ? " Salah: " : " Advice: ") + lastResult.safetySteps[0]
+                    : "";
+
+                const utter = new SpeechSynthesisUtterance(prefix + summaryText + firstStep);
+                utter.lang = isHi ? "hi-IN" : "en-IN";
+                utter.rate = 0.96;
+                utter.pitch = 1.0;
+
+                // Pick best available Indian/Hindi voice if loaded
+                const voices = window.speechSynthesis.getVoices();
+                if (voices && voices.length) {
+                    const preferred = voices.find(v => v.lang.toLowerCase().includes(isHi ? "hi" : "en-in"))
+                        || voices.find(v => v.lang.toLowerCase().includes("en"));
+                    if (preferred) utter.voice = preferred;
+                }
+
+                utter.onstart = () => {
+                    isSpeaking = true;
+                    voiceAlertBtn.classList.remove("bg-sky-500/20", "border-sky-400/60");
+                    voiceAlertBtn.classList.add("voice-active", "bg-red-500/25", "border-red-400");
+                    voiceBtnIcon.textContent = "⏹️";
+                    voiceBtnLabel.textContent = isHi ? "Awaaz Band Karein (Stop)" : "Stop Voice Alert";
+                };
+
+                utter.onend = stopVoice;
+                utter.onerror = stopVoice;
+
+                window.speechSynthesis.speak(utter);
+            } catch (err) {
+                stopVoice();
+                showToast("Unable to play voice alert right now.", "🔇");
+            }
+        }
+
+        voiceAlertBtn.addEventListener("click", speakResult);
+
+        // ============================================================
+        // TAB SWITCHING & INPUT HELPERS
+        // ============================================================
+        function switchTab(tabName) {
+            activeTab = tabName;
+            tabBtns.forEach(btn => {
+                const isSelected = btn.dataset.tab === tabName;
+                btn.setAttribute("aria-selected", isSelected ? "true" : "false");
+                if (isSelected) {
+                    btn.className = "tab-btn flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold transition-all bg-sky-500 text-slate-950 shadow-md cursor-pointer";
+                } else {
+                    btn.className = "tab-btn flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-2 py-2.5 px-2 rounded-xl text-xs sm:text-sm font-bold transition-all text-slate-300 hover:bg-slate-800/70 hover:text-white cursor-pointer";
+                }
+            });
+
+            Object.keys(tabPanels).forEach(key => {
+                tabPanels[key].classList.toggle("hidden", key !== tabName);
+            });
+        }
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+        });
+
+        // Quick Demo Message Chips
+        document.querySelectorAll(".sample-chip").forEach(chip => {
+            chip.addEventListener("click", () => {
+                const key = chip.dataset.sample;
+                if (DEMO_SAMPLES[key]) {
+                    msgInput.value = DEMO_SAMPLES[key];
+                    msgInput.focus();
+                    showToast("Demo message loaded! Ab 'Scan Now' dabayein.", "⚡");
+                }
+            });
+        });
+
+        // Quick URL Sample Chips
+        document.querySelectorAll(".url-sample-chip").forEach(chip => {
+            chip.addEventListener("click", () => {
+                urlInput.value = chip.dataset.urlSample;
+                updateLiveUrlBreakdown(urlInput.value);
+                urlInput.focus();
+            });
+        });
+
+        clearMsgBtn.addEventListener("click", () => {
+            msgInput.value = "";
+            msgInput.focus();
+        });
+
+        clearUrlBtn.addEventListener("click", () => {
+            urlInput.value = "";
+            liveUrlBreakdown.classList.add("hidden");
+            urlInput.focus();
+        });
+
+        // ============================================================
+        // LIVE LINK / UPI URL PARSER & DOMAIN BREAKDOWN
+        // ============================================================
+        const SHADY_TLDS = [".xyz", ".top", ".click", ".apk", ".tk", ".ml", ".ga", ".cf", ".gq", ".buzz", ".icu", ".vip", ".work", ".loan", ".cc", ".pw", ".club"];
+        const SHORTENERS = ["bit.ly", "tinyurl.com", "t.co", "rb.gy", "cutt.ly", "is.gd", "shorturl.at", "ow.ly", "rebrand.ly", "tiny.cc", "goo.gl"];
+        const BRAND_OFFICIAL_MAP = {
+            sbi: ["sbi.co.in", "onlinesbi.sbi", "sbi.bank.in"],
+            yono: ["sbi.co.in", "onlinesbi.sbi"],
+            hdfc: ["hdfcbank.com"],
+            icici: ["icicibank.com"],
+            axis: ["axisbank.com"],
+            pnb: ["pnbindia.in"],
+            paytm: ["paytm.com"],
+            phonepe: ["phonepe.com"],
+            parivahan: ["parivahan.gov.in", "echallan.parivahan.gov.in"],
+            challan: ["parivahan.gov.in", "echallan.parivahan.gov.in"],
+            indiapost: ["indiapost.gov.in"],
+            uidai: ["uidai.gov.in"],
+            aadhaar: ["uidai.gov.in"],
+            incometax: ["incometax.gov.in"],
+            cybercrime: ["cybercrime.gov.in"],
+            epfo: ["epfindia.gov.in"],
+            bijli: ["gov.in", "org.in"]
+        };
+
+        /**
+         * Parses any pasted URL or UPI URI and returns detailed inspection fields
+         */
+        function inspectUrlOrUpi(rawInput) {
+            const cleaned = rawInput.trim();
+            if (!cleaned) return null;
+
+            const lower = cleaned.toLowerCase();
+
+            // Case 1: UPI Payment URI (upi://pay?...)
+            if (lower.startsWith("upi://")) {
+                let pa = "Unknown";
+                let pn = "Not specified";
+                let am = "Not specified";
+                let tn = "";
+                try {
+                    const queryPart = cleaned.split("?")[1] || "";
+                    const params = new URLSearchParams(queryPart);
+                    pa = params.get("pa") || "Unknown";
+                    pn = params.get("pn") || "Not specified";
+                    am = params.get("am") ? `₹${params.get("am")}` : "Open Amount";
+                    tn = params.get("tn") || "";
+                } catch (e) {}
+
+                return {
+                    isUpi: true,
+                    protocol: "upi://",
+                    domain: pa,
+                    payeeVpa: pa,
+                    payeeName: pn,
+                    amount: am,
+                    note: tn,
+                    isApk: false,
+                    isShortener: false,
+                    isShadyTld: false,
+                    spoofedBrand: null,
+                    isOfficialGov: false
+                };
+            }
+
+            // Case 2: Standard HTTP/HTTPS or bare domain
+            let normalized = cleaned;
+            if (!/^https?:\/\//i.test(normalized)) {
+                normalized = "http://" + normalized;
+            }
+
+            let parsed;
+            try {
+                parsed = new URL(normalized);
+            } catch (e) {
+                return null;
+            }
+
+            const hostname = parsed.hostname.toLowerCase();
+            const fullPath = (hostname + parsed.pathname).toLowerCase();
+            const hasExplicitHttps = /^https:\/\//i.test(cleaned);
+            const hasExplicitHttp = /^http:\/\//i.test(cleaned);
+            const protocol = hasExplicitHttps ? "HTTPS (Encrypted)" : (hasExplicitHttp ? "HTTP (Insecure ⚠️)" : "No Protocol");
+
+            const isApk = /\.apk(\?|$)/i.test(parsed.pathname) || /apk/i.test(parsed.pathname);
+            const isShortener = SHORTENERS.some(s => hostname === s || hostname.endsWith("." + s));
+            const isShadyTld = SHADY_TLDS.some(tld => hostname.endsWith(tld));
+            const isIpAddress = /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname);
+            const isOfficialGov = hostname.endsWith(".gov.in") || hostname.endsWith(".nic.in") || hostname.endsWith(".sbi");
+
+            // Check brand impersonation
+            let spoofedBrand = null;
+            for (const [brand, officialDomains] of Object.entries(BRAND_OFFICIAL_MAP)) {
+                if (fullPath.includes(brand)) {
+                    const isLegit = officialDomains.some(d => hostname === d || hostname.endsWith("." + d));
+                    if (!isLegit) {
+                        spoofedBrand = brand.toUpperCase();
+                        break;
+                    }
+                }
+            }
+
+            return {
+                isUpi: false,
+                protocol,
+                isHttpOnly: hasExplicitHttp,
+                domain: hostname,
+                isApk,
+                isShortener,
+                isShadyTld,
+                isIpAddress,
+                spoofedBrand,
+                isOfficialGov
+            };
+        }
+
+        function renderBadgeItem(label, value, status = "neutral") {
+            const colors = {
+                danger: "border-red-500/40 bg-red-500/10 text-red-200",
+                warn: "border-amber-500/40 bg-amber-500/10 text-amber-200",
+                safe: "border-emerald-500/40 bg-emerald-500/10 text-emerald-200",
+                neutral: "border-slate-800 bg-slate-900/70 text-slate-200"
+            };
+            return `
+                <div class="rounded-xl border px-3 py-2 ${colors[status]}">
+                    <div class="text-[10px] uppercase tracking-wider opacity-75 font-bold">${label}</div>
+                    <div class="font-bold mt-0.5 break-all">${value}</div>
+                </div>
+            `;
+        }
+
+        function updateLiveUrlBreakdown(val) {
+            const info = inspectUrlOrUpi(val);
+            if (!info) {
+                liveUrlBreakdown.classList.add("hidden");
+                return;
+            }
+
+            liveUrlBreakdown.classList.remove("hidden");
+            if (info.isUpi) {
+                liveUrlTypeBadge.textContent = "UPI PAYMENT LINK";
+                liveUrlTypeBadge.className = "text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-red-500/20 text-red-300 border border-red-500/40";
+                liveUrlGrid.innerHTML = [
+                    renderBadgeItem("Protocol", "upi://pay (Money Transfer)", "danger"),
+                    renderBadgeItem("Payee UPI ID (VPA)", info.payeeVpa, "warn"),
+                    renderBadgeItem("Payee Name", info.payeeName, "neutral"),
+                    renderBadgeItem("Debit Amount", info.amount, "danger")
+                ].join("");
+                liveUpiWarning.classList.remove("hidden");
+                liveUpiWarning.innerHTML = `⚠️ <strong>UPI TRAP WARNING:</strong> Ye link click karne par aapke account se <strong>${info.amount}</strong> paisa <strong>${info.payeeVpa}</strong> ko SEND (debit) hoga! Paise RECEIVE karne ke liye kabhi UPI PIN nahi daalna hota.`;
+            } else {
+                liveUrlTypeBadge.textContent = info.isOfficialGov ? "OFFICIAL GOV DOMAIN" : "WEB URL";
+                liveUrlTypeBadge.className = info.isOfficialGov
+                    ? "text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40"
+                    : "text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-300 border border-sky-500/40";
+
+                liveUpiWarning.classList.add("hidden");
+                liveUrlGrid.innerHTML = [
+                    renderBadgeItem("Protocol", info.protocol, info.isHttpOnly ? "danger" : (info.protocol.startsWith("HTTPS") ? "safe" : "warn")),
+                    renderBadgeItem("Domain Name", info.domain, info.isOfficialGov ? "safe" : (info.isShadyTld || info.isIpAddress ? "danger" : "neutral")),
+                    renderBadgeItem("Suspicious TLD / APK", info.isApk ? "Malicious .APK Download 🚨" : (info.isShadyTld ? "High-Risk Domain Extension ⚠️" : "Clean Extension ✅"), info.isApk || info.isShadyTld ? "danger" : "safe"),
+                    renderBadgeItem("Shortener / Brand Spoof", info.spoofedBrand ? `Fake ${info.spoofedBrand} Impersonation 🚨` : (info.isShortener ? "Hidden Short Link (bit.ly etc.) ⚠️" : "No Impersonation Detected ✅"), info.spoofedBrand ? "danger" : (info.isShortener ? "warn" : "safe"))
+                ].join("");
+            }
+        }
+
+        urlInput.addEventListener("input", () => updateLiveUrlBreakdown(urlInput.value));
+
+        // ============================================================
+        // SCREENSHOT UPLOAD & DRAG-AND-DROP HANDLERS
+        // ============================================================
+        function handleImageFile(file) {
+            if (!file || !file.type.startsWith("image/")) {
+                showToast("Please upload a valid image file (PNG, JPG, WEBP).", "⚠️");
+                return;
+            }
+            if (file.size > 12 * 1024 * 1024) {
+                showToast("Image bahut badi hai (Max 12 MB allowed).", "⚠️");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                const dataUrl = e.target.result;
+                // Resize gently via offscreen canvas so API transfer is fast and crisp
+                const img = new Image();
+                img.onload = () => {
+                    const maxDim = 1280;
+                    let w = img.width;
+                    let h = img.height;
+                    if (w > maxDim || h > maxDim) {
+                        const ratio = Math.min(maxDim / w, maxDim / h);
+                        w = Math.round(w * ratio);
+                        h = Math.round(h * ratio);
+                    }
+                    const c = document.createElement("canvas");
+                    c.width = w;
+                    c.height = h;
+                    c.getContext("2d").drawImage(img, 0, 0, w, h);
+                    const compressedUrl = c.toDataURL("image/jpeg", 0.85);
+                    uploadedImageBase64 = compressedUrl.split(",")[1];
+                    uploadedImageMime = "image/jpeg";
+                    uploadedFileName = file.name;
+
+                    screenshotPreview.src = compressedUrl;
+                    fileMeta.textContent = `${file.name} (${Math.round(file.size / 1024)} KB)`;
+                    dropPlaceholder.classList.add("hidden");
+                    previewWrapper.classList.remove("hidden");
+                };
+                img.onerror = () => {
+                    showToast("Could not read image preview.", "⚠️");
+                };
+                img.src = dataUrl;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        dropZone.addEventListener("click", (e) => {
+            if (e.target.closest("#remove-image-btn")) return;
+            fileInput.click();
+        });
+
+        fileInput.addEventListener("change", (e) => {
+            if (e.target.files && e.target.files[0]) {
+                handleImageFile(e.target.files[0]);
+            }
+        });
+
+        dropZone.addEventListener("dragover", (e) => {
+            e.preventDefault();
+            dropZone.classList.add("border-sky-400", "bg-sky-500/10");
+        });
+
+        dropZone.addEventListener("dragleave", () => {
+            dropZone.classList.remove("border-sky-400", "bg-sky-500/10");
+        });
+
+        dropZone.addEventListener("drop", (e) => {
+            e.preventDefault();
+            dropZone.classList.remove("border-sky-400", "bg-sky-500/10");
+            if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+                handleImageFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        removeImageBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            uploadedImageBase64 = null;
+            uploadedImageMime = null;
+            uploadedFileName = "";
+            fileInput.value = "";
+            screenshotPreview.src = "";
+            previewWrapper.classList.add("hidden");
+            dropPlaceholder.classList.remove("hidden");
+        });
+
+        // ============================================================
+        // LOCAL INDIAN SCAM HEURISTIC ENGINE (ZERO-LATENCY & OFFLINE-SAFE)
+        // ============================================================
+        function runLocalHeuristicEngine(text, mode = "message") {
+            const raw = text.trim();
+            const lower = raw.toLowerCase();
+            let score = 0;
+            let flags = [];
+            let detectedCategories = [];
+
+            // Extract embedded URLs or UPI URIs from text
+            const extractedUrls = raw.match(/(?:https?:\/\/|upi:\/\/|www\.)[^\s]+/gi) || [];
+            if (mode === "link" && extractedUrls.length === 0) {
+                extractedUrls.push(raw);
+            }
+
+            // 1. Electricity / Bijli Bill Disconnection Scam
+            if (/(electricity|bijli|power).*(disconnect|cut|suspend|not updated|unpaid|tonight|officer)/i.test(raw) || /bijli-?update/i.test(lower)) {
+                score += 55;
+                detectedCategories.push("Electricity Bill Scam");
+                flags.push("Bijli connection raat ko kaatne ki dhamki — ye India ka sabse common fake SMS scam hai.");
+            }
+
+            // 2. UPI PIN-to-Receive / Cashback Trap
+            if (/upi:\/\/(pay|collect)/i.test(raw) || /(enter|daalein|type).*(upi\s*pin|mpin).*(receive|claim|cashback|credit|get)/i.test(raw) || /(cashback|won rs|reward).*(upi|paytm|phonepe|gpay)/i.test(raw)) {
+                score += 65;
+                detectedCategories.push("UPI Cashback / Collect Trap");
+                flags.push("Paise RECEIVE karne ke liye kabhi bhi UPI PIN ya link click nahi karna hota — ye aapke paise kaat lega!");
+            }
+
+            // 3. Malicious .APK / Fake Traffic e-Challan
+            if (/\.apk\b/i.test(raw) || /(e-?challan|parivahan|traffic fine|rto).*(download|apk|install|court|pending)/i.test(raw)) {
+                score += 65;
+                detectedCategories.push("Malicious APK / Fake e-Challan");
+                flags.push("Unknown .APK file download karne ko kaha gaya hai — ye virus/trojan hota hai jo aapke OTP aur bank app chura leta hai.");
+            }
+
+            // 4. Bank KYC / PAN / Aadhaar Suspension Scam
+            if (/(kyc|pan|aadhaar|yono|netbanking|sbi|hdfc|icici|axis).*(suspend|block|deactivat|expire|update immediately|blocked today)/i.test(raw)) {
+                score += 50;
+                detectedCategories.push("Fake Bank KYC Phishing");
+                flags.push("Account ya PAN/KYC aaj hi block hone ka dar dikhaya gaya hai — asli bank kabhi SMS link se KYC nahi maangte.");
+            }
+
+            // 5. Digital Arrest / CBI / Police / FedEx / TRAI Threat
+            if (/(digital arrest|cbi|enforcement directorate|fedex|customs parcel|illegal drugs|money laundering|trai|sim.*block|arrest warrant)/i.test(raw)) {
+                score += 65;
+                detectedCategories.push("Digital Arrest / Impersonation Scam");
+                flags.push("Police, CBI, Customs ya TRAI ke naam par daraya gaya hai — 'Digital Arrest' jaisa koi kanoon nahi hota.");
+            }
+
+            // 6. Part-Time Job / Telegram / YouTube Like Scam
+            if (/(part[\s-]?time|work from home|daily earn|telegram|like youtube|prepaid task|hotel review).*(rs|₹|inr|earn|income|salary)/i.test(raw)) {
+                score += 48;
+                detectedCategories.push("Fake Part-Time Task Scam");
+                flags.push("Ghar baithe aasan paise ya Telegram task ka lalach — aage chalkar ye 'prepaid task' ke naam par bada fraud karte hain.");
+            }
+
+            // 7. Lottery / KBC / Lucky Draw Scam
+            if (/(congratulations|lucky draw|lottery|kbc|kaun banega crorepati|jackpot|prize money|won rs|won ₹)/i.test(raw)) {
+                score += 40;
+                detectedCategories.push("Lottery / Prize Fraud");
+                flags.push("Bina hissa liye inam ya cashback jeetne ka jhootha daawa kiya gaya hai.");
+            }
+
+            // 8. Urgency & Fear Tactics
+            const urgencyMatches = raw.match(/(immediately|tonight|today|within \d+ hours|urgent|avoid court|last warning|act now|suspended|blocked)/gi);
+            if (urgencyMatches && urgencyMatches.length >= 1) {
+                score += Math.min(24, urgencyMatches.length * 10);
+                flags.push("Jaldbaazi aur dar (Urgency/Fear tactics) ka istemal taaki aap bina soche click kar dein.");
+            }
+
+            // 9. Personal Mobile Number as "Officer / Support"
+            if (/(call|contact|whatsapp).{0,25}(\+91[\s-]?)?[6-9]\d{4}[x\d]{5}/i.test(raw) || /(officer|helpline|support).{0,20}[6-9]\d{4}[x\d]{5}/i.test(raw)) {
+                score += 25;
+                flags.push("Official toll-free number ki jagah personal 10-digit mobile number par call karne ko kaha gaya hai.");
+            }
+
+            // 10. URL & Domain Inspection
+            let hasOfficialSafeUrlOnly = false;
+            extractedUrls.forEach(u => {
+                const info = inspectUrlOrUpi(u);
+                if (!info) return;
+
+                if (info.isUpi) {
+                    score += 55;
+                    if (!detectedCategories.includes("UPI Cashback / Collect Trap")) {
+                        detectedCategories.push("UPI Payment Request Link");
+                    }
+                    flags.push(`UPI Payment Link detected (Payee: ${info.payeeVpa}, Amount: ${info.amount}) — is par click karne se paise katenge.`);
+                } else {
+                    if (info.isApk) {
+                        score += 55;
+                        flags.push(`Link me direct .APK app file (${info.domain}) hai — ye phone hack kar sakta hai.`);
+                    }
+                    if (info.spoofedBrand) {
+                        score += 45;
+                        detectedCategories.push(`Fake ${info.spoofedBrand} Phishing Link`);
+                        flags.push(`Nakli brand link: '${info.spoofedBrand}' ka naam use kiya hai par domain (${info.domain}) official nahi hai.`);
+                    }
+                    if (info.isShadyTld) {
+                        score += 35;
+                        flags.push(`Suspicious sasta domain extension (${info.domain}) jo scammers phishing ke liye use karte hain.`);
+                    }
+                    if (info.isShortener) {
+                        score += 28;
+                        flags.push(`Shortened URL (${info.domain}) use kiya gaya hai taaki asli nakli website chhupi rahe.`);
+                    }
+                    if (info.isIpAddress) {
+                        score += 35;
+                        flags.push(`Website naam ki jagah raw IP address (${info.domain}) diya gaya hai — highly suspicious.`);
+                    }
+                    if (info.isHttpOnly) {
+                        score += 15;
+                        flags.push("Link unsecured HTTP par hai (HTTPS lock nahi hai).");
+                    }
+                    if (info.isOfficialGov && !info.isApk && !info.isShortener) {
+                        hasOfficialSafeUrlOnly = true;
+                    }
+                }
+            });
+
+            // 11. Genuine Transactional Bank Alert Signals (Reduces false positives)
+            const hasGenuineSignals = /(if not done by you|do not share otp|never share otp|call official bank|toll-free number on back of your card|debited for rs|credited to your a\/c)/i.test(raw);
+            if (hasGenuineSignals && extractedUrls.length === 0 && score < 25) {
+                score = Math.max(4, score - 20);
+            }
+            if (mode === "link" && hasOfficialSafeUrlOnly && score === 0) {
+                score = 5;
+            }
+
+            // Clamp score between 0 and 99
+            score = Math.min(99, Math.max(4, Math.round(score)));
+
+            // Determine Verdict
+            let verdict = "SAFE";
+            if (score >= 60) verdict = "DANGER";
+            else if (score >= 30) verdict = "CAUTION";
+
+            const scamType = detectedCategories.length > 0
+                ? detectedCategories[0]
+                : (verdict === "SAFE"
+                    ? (hasGenuineSignals ? "Genuine Bank Alert" : (hasOfficialSafeUrlOnly ? "Official Verified Domain" : "No Obvious Scam Found"))
+                    : "Suspicious Message / Link");
+
+            // Build Crisp Hinglish & English Summaries
+            let summaryHi, summaryEn;
+            if (verdict === "DANGER") {
+                summaryHi = `Ye 100% fraud (${scamType}) lag raha hai! Isme aapko darakar ya lalach dekar paise churaane ya phone hack karne ki koshish ki ja rahi hai. Kisi bhi link par click na karein aur na hi OTP/UPI PIN batayein.`;
+                summaryEn = `High probability of fraud (${scamType}). This uses classic Indian cyber-scam red flags like urgency, fake links, APK files, or UPI PIN traps. Do not click any link, call the number, or share your PIN/OTP.`;
+            } else if (verdict === "CAUTION") {
+                summaryHi = `Is message/link me kuch suspicious sanket mile hain. Bina official app ya bank helpline se confirm kiye koi bhi detail, paisa, ya OTP share na karein.`;
+                summaryEn = `Some suspicious indicators were detected. Verify independently through the official app or helpline before clicking links or sharing any personal details.`;
+            } else {
+                summaryHi = `Isme koi bada scam pattern nahi mila aur ye normal/safe message lag raha hai. Phir bhi kisi anjaan vyakti ko apna OTP, UPI PIN ya password kabhi mat batayein.`;
+                summaryEn = `No major scam signals were detected and this appears safe. Still, never share your OTP, UPI PIN, or card CVV with anyone.`;
+            }
+
+            // Default lists if safe
+            if (flags.length === 0) {
+                flags = [
+                    "Koi suspicious shortened URL, fake .APK file ya UPI PIN trap nahi mila.",
+                    "Koi dhamki, urgency ya personal mobile number nahi paya gaya."
+                ];
+            }
+
+            const safetySteps = verdict === "DANGER"
+                ? [
+                    "Is link ya .APK file par bilkul click mat karein aur message turant delete/report karein.",
+                    "Apna UPI PIN, OTP, CVV ya Aadhaar/PAN details kisi ke saath share na karein.",
+                    "Bhejne wale number ko WhatsApp/SMS par Block aur Report Spam karein.",
+                    "Agar galti se paisa kat gaya ho toh turant 1930 par call karein."
+                ]
+                : verdict === "CAUTION"
+                    ? [
+                        "Direct link par click karne ke bajay official app (SBI YONO, Paytm, Parivahan) khud khol kar check karein.",
+                        "Unknown number par callback na karein; hamesha official website ya card ke peeche likha number use karein.",
+                        "Kisi bhi payment ke liye UPI PIN daalne se pehle amount aur receiver ka naam zaroor padhein."
+                    ]
+                    : [
+                        "Agar ye bank transaction alert hai aur aapne nahi kiya, toh turant bank ke official toll-free number par call karein.",
+                        "Hamesha yaad rakhein: Paise receive karne ke liye kabhi UPI PIN nahi lagta.",
+                        "Anjaan links aur .APK files se hamesha door rahein."
+                    ];
+
+            return {
+                riskScore: score,
+                verdict,
+                scamType,
+                summaryHi,
+                summaryEn,
+                redFlags: flags,
+                safetySteps,
+                engineSource: "Instant Indian Rule Engine"
+            };
+        }
+
+        // ============================================================
+        // GEMINI API DEEP ANALYSIS (WITH EXPONENTIAL BACKOFF & FALLBACK)
+        // ============================================================
+        async function fetchWithRetry(url, options, maxRetries = 2) {
+            const delays = [1000, 2000];
+            for (let attempt = 0; attempt <= maxRetries; attempt++) {
+                try {
+                    const controller = new AbortController();
+                    const timeoutId = setTimeout(() => controller.abort(), 14000);
+                    const response = await fetch(url, { ...options, signal: controller.signal });
+                    clearTimeout(timeoutId);
+
+                    if (response.ok) {
+                        return await response.json();
+                    }
+                    if (response.status >= 400 && response.status < 500 && response.status !== 429) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                } catch (err) {
+                    if (attempt === maxRetries) throw err;
+                }
+                await new Promise(r => setTimeout(r, delays[attempt] || 2000));
+            }
+            throw new Error("API unavailable");
+        }
+
+        async function runGeminiDeepScan({ text, mode, imageBase64, imageMime }) {
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+
+            const systemPrompt = `You are ScamShield India, an expert Indian cybersecurity fraud detection engine helping Indian students, parents, and elders spot SMS, WhatsApp, Link, UPI, APK, e-Challan, Bijli Bill, Bank KYC, Digital Arrest, and QR scams.
+Analyze the user's input accurately. Do NOT false-flag genuine transactional bank debit/credit alerts that ask users not to share OTP and contain no shady links.
+Respond ONLY in strict JSON matching the schema.
+- summaryHi: 2-3 clear, simple lines in friendly Hinglish (Hindi written in Roman script, easy for Indian parents to understand).
+- summaryEn: 2-3 clear lines in simple English.
+- redFlags: 2 to 4 concise bullet points explaining exact clues found (or why it looks safe).
+- safetySteps: 3 to 4 actionable next steps.`;
+
+            const parts = [];
+            if (mode === "screenshot" && imageBase64) {
+                parts.push({
+                    text: "Analyze this uploaded screenshot (SMS, WhatsApp chat, website, QR code, or payment screen) for Indian cyber scams, fake links, UPI PIN traps, malicious APKs, or impersonation."
+                });
+                parts.push({
+                    inlineData: {
+                        mimeType: imageMime || "image/jpeg",
+                        data: imageBase64
+                    }
+                });
+            } else {
+                parts.push({
+                    text: `Input Type: ${mode === "link" ? "URL / UPI Link" : "Message / SMS / Email"}\nContent to analyze:\n"""${text}"""`
+                });
+            }
+
+            const payload = {
+                contents: [{ role: "user", parts }],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            riskScore: { type: "INTEGER" },
+                            verdict: { type: "STRING", enum: ["DANGER", "CAUTION", "SAFE"] },
+                            scamType: { type: "STRING" },
+                            summaryHi: { type: "STRING" },
+                            summaryEn: { type: "STRING" },
+                            redFlags: { type: "ARRAY", items: { type: "STRING" } },
+                            safetySteps: { type: "ARRAY", items: { type: "STRING" } }
+                        },
+                        required: ["riskScore", "verdict", "scamType", "summaryHi", "summaryEn", "redFlags", "safetySteps"]
+                    }
+                }
+            };
+
+            const data = await fetchWithRetry(apiUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            }, 1);
+
+            const rawText = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (!rawText) throw new Error("Empty AI response");
+
+            const parsed = JSON.parse(rawText);
+            parsed.riskScore = Math.max(0, Math.min(100, Number(parsed.riskScore) || 0));
+            return parsed;
+        }
+
+        // ============================================================
+        // MAIN SCAN EXECUTION FLOW (HYBRID ENGINE)
+        // ============================================================
+        function setScanningState(isLoading) {
+            scanBtn.disabled = isLoading;
+            if (isLoading) {
+                scanBtn.classList.add("scan-bar", "opacity-90", "cursor-wait");
+                scanBtnIcon.textContent = "⏳";
+                scanBtnText.textContent = activeTab === "screenshot"
+                    ? "AI Vision Screenshot Check Kar Raha Hai..."
+                    : "Scanning Fraud Patterns & Deep AI Check...";
+            } else {
+                scanBtn.classList.remove("scan-bar", "opacity-90", "cursor-wait");
+                scanBtnIcon.textContent = "🔍";
+                scanBtnText.textContent = "Scan Now (Check Fraud)";
+            }
+        }
+
+        async function executeScan() {
+            stopVoice();
+
+            let snippet = "";
+            let mode = activeTab;
+
+            if (mode === "message") {
+                const txt = msgInput.value.trim();
+                if (!txt) {
+                    showToast("Pehle koi SMS ya WhatsApp message paste karein, ya demo chip chunein.", "💬");
+                    msgInput.focus();
+                    return;
+                }
+                snippet = txt;
+            } else if (mode === "link") {
+                const url = urlInput.value.trim();
+                if (!url) {
+                    showToast("Pehle koi website link ya UPI URL paste karein.", "🔗");
+                    urlInput.focus();
+                    return;
+                }
+                updateLiveUrlBreakdown(url);
+                snippet = url;
+            } else if (mode === "screenshot") {
+                if (!uploadedImageBase64) {
+                    showToast("Pehle koi screenshot photo upload karein.", "📸");
+                    return;
+                }
+                snippet = `Screenshot: ${uploadedFileName || "Uploaded Image"}`;
+            }
+
+            setScanningState(true);
+
+            try {
+                if (mode === "screenshot") {
+                    // Screenshot requires Gemini multimodal vision
+                    try {
+                        const aiRes = await runGeminiDeepScan({
+                            mode: "screenshot",
+                            imageBase64: uploadedImageBase64,
+                            imageMime: uploadedImageMime
+                        });
+                        aiRes.engineSource = "Gemini AI Vision";
+                        finalizeResult(aiRes, mode, snippet);
+                    } catch (err) {
+                        // Clean friendly fallback when AI vision is unreachable
+                        const visionFallback = {
+                            riskScore: 45,
+                            verdict: "CAUTION",
+                            scamType: "AI Vision Unavailable",
+                            summaryHi: "Abhi Screenshot AI Vision server se connect nahi ho paya. Kripya screenshot ka text ya link copy karke 'Message / SMS' ya 'Link / UPI URL' tab me paste karein — wahan instant offline detector 100% kaam karta hai!",
+                            summaryEn: "AI Vision analysis is currently unreachable. Please copy the text or URL from the screenshot and paste it into the 'Message / SMS' or 'Link / UPI URL' tab for instant local scam detection.",
+                            redFlags: [
+                                "Screenshot me dikhne wale kisi bhi unknown link ya .APK download par click na karein.",
+                                "Agar QR code ya UPI screen par 'Pay' likha hai aur PIN maang raha hai, toh wo scam hai."
+                            ],
+                            safetySteps: [
+                                "Message text copy karke Tab 1 (Message / SMS) me scan karein.",
+                                "Kisi anjaan vyakti ko OTP, PIN, ya screen-sharing access (AnyDesk/TeamViewer) bilkul mat dein.",
+                                "Shaq hone par official app ya 1930 helpline se verify karein."
+                            ],
+                            engineSource: "Offline Vision Guidance"
+                        };
+                        finalizeResult(visionFallback, mode, snippet);
+                    }
+                } else {
+                    // Hybrid Text / URL Scan: Instant Local Heuristic + Gemini Deep Analysis
+                    const localRes = runLocalHeuristicEngine(snippet, mode);
+
+                    try {
+                        const aiRes = await runGeminiDeepScan({ text: snippet, mode });
+                        // Combine safely: ensure critical local traps (like APK or UPI pay trap) never get under-scored
+                        const combinedScore = localRes.riskScore >= 75
+                            ? Math.max(localRes.riskScore, aiRes.riskScore)
+                            : aiRes.riskScore;
+
+                        let combinedVerdict = aiRes.verdict;
+                        if (combinedScore >= 60) combinedVerdict = "DANGER";
+                        else if (combinedScore >= 30 && combinedVerdict === "SAFE") combinedVerdict = "CAUTION";
+
+                        const merged = {
+                            ...aiRes,
+                            riskScore: combinedScore,
+                            verdict: combinedVerdict,
+                            engineSource: "Gemini AI + Indian Rule Engine"
+                        };
+                        finalizeResult(merged, mode, snippet);
+                    } catch (err) {
+                        // Graceful silent fallback to instant local Indian Scam Engine
+                        finalizeResult(localRes, mode, snippet);
+                    }
+                }
+            } finally {
+                setScanningState(false);
+            }
+        }
+
+        function finalizeResult(result, mode, snippet) {
+            lastResult = { ...result, mode, snippet };
+            renderResultCard(lastResult, true);
+            saveScanToHistory(lastResult);
+        }
+
+        scanBtn.addEventListener("click", executeScan);
+
+        // ============================================================
+        // RESULT CARD RENDERER & ANIMATED GAUGE
+        // ============================================================
+        function renderResultCard(res, scrollIntoView = true) {
+            resultSection.classList.remove("hidden");
+
+            const score = Math.max(0, Math.min(100, Number(res.riskScore) || 0));
+            const isDanger = res.verdict === "DANGER" || score >= 60;
+            const isCaution = !isDanger && (res.verdict === "CAUTION" || score >= 30);
+            const isHi = currentLang === "hi";
+
+            // Apply Color-Coded Theme (Crimson Red / Amber / Emerald Green)
+            let accentHex = "#10b981";
+            if (isDanger) {
+                accentHex = "#ef4444";
+                resultSection.className = "glass-card rounded-3xl overflow-hidden shadow-2xl border-2 border-red-500/70 transition-colors";
+                verdictBanner.className = "px-5 py-4 flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-red-600 to-rose-700";
+                verdictEmoji.textContent = "🚨";
+                verdictTitle.textContent = isHi ? "KHATRA: HIGH RISK SCAM!" : "DANGER: HIGH RISK SCAM!";
+            } else if (isCaution) {
+                accentHex = "#f59e0b";
+                resultSection.className = "glass-card rounded-3xl overflow-hidden shadow-2xl border-2 border-amber-500/70 transition-colors";
+                verdictBanner.className = "px-5 py-4 flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-amber-600 to-orange-600";
+                verdictEmoji.textContent = "⚠️";
+                verdictTitle.textContent = isHi ? "SAVDHAN: SUSPICIOUS" : "CAUTION: SUSPICIOUS";
+            } else {
+                accentHex = "#10b981";
+                resultSection.className = "glass-card rounded-3xl overflow-hidden shadow-2xl border-2 border-emerald-500/70 transition-colors";
+                verdictBanner.className = "px-5 py-4 flex flex-wrap items-center justify-between gap-3 bg-gradient-to-r from-emerald-600 to-teal-600";
+                verdictEmoji.textContent = "✅";
+                verdictTitle.textContent = isHi ? "SAFE LAG RAHA HAI" : "LOOKS SAFE";
+            }
+
+            scamCategoryPill.textContent = res.scamType || "Security Analysis";
+            engineSourcePill.textContent = res.engineSource || "Hybrid Engine";
+
+            // Animate SVG Circular Meter (Circumference = 2 * PI * 50 = 314.16)
+            const circumference = 314.16;
+            gaugeCircle.style.stroke = accentHex;
+            gaugeCircle.style.strokeDashoffset = circumference;
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    gaugeCircle.style.strokeDashoffset = circumference - (score / 100) * circumference;
+                });
+            });
+
+            // Smooth number counter
+            riskScoreNum.textContent = `${score}%`;
+            riskScoreNum.style.color = accentHex;
+
+            // Bilingual Summary
+            resultSummary.textContent = isHi ? (res.summaryHi || res.summaryEn) : (res.summaryEn || res.summaryHi);
+
+            // Emergency Banner for High Danger
+            dangerEmergencyBanner.classList.toggle("hidden", !isDanger);
+
+            // Section Headings
+            flagsHeading.innerHTML = isDanger || isCaution
+                ? `<span>🚩</span><span>${isHi ? "Pakde Gaye Red Flags" : "Detected Red Flags"}</span>`
+                : `<span>🛡️</span><span>${isHi ? "Safety Check Observations" : "Safety Check Observations"}</span>`;
+            flagsHeading.className = `text-sm font-extrabold flex items-center gap-2 ${isDanger ? "text-rose-400" : (isCaution ? "text-amber-400" : "text-emerald-400")}`;
+
+            safetyHeading.innerHTML = `<span>✅</span><span>${isHi ? "Aage Kya Karein (Safety Checklist)" : "What To Do Next (Safety Checklist)"}</span>`;
+
+            // Populate Red Flags
+            const flagsArr = Array.isArray(res.redFlags) ? res.redFlags : [];
+            redFlagsList.innerHTML = flagsArr.map(item => `
+                <li class="flex items-start gap-2.5 bg-slate-900/70 border border-slate-800/80 rounded-xl p-2.5 leading-snug">
+                    <span class="shrink-0 mt-0.5">${isDanger ? "🔴" : (isCaution ? "🟡" : "🟢")}</span>
+                    <span>${escapeHtml(item)}</span>
+                </li>
+            `).join("");
+
+            // Populate Safety Steps
+            const stepsArr = Array.isArray(res.safetySteps) ? res.safetySteps : [];
+            safetyStepsList.innerHTML = stepsArr.map((step, idx) => `
+                <li class="flex items-start gap-2.5 bg-slate-900/70 border border-slate-800/80 rounded-xl p-2.5 leading-snug">
+                    <span class="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 flex items-center justify-center text-[11px] font-black shrink-0 mt-0.5">${idx + 1}</span>
+                    <span>${escapeHtml(step)}</span>
+                </li>
+            `).join("");
+
+            if (scrollIntoView) {
+                resultSection.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+        }
+
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // ============================================================
+        // WHATSAPP FAMILY ALERT SHARE & COPY
+        // ============================================================
+        function buildShareWarningText() {
+            if (!lastResult) return "";
+            const emoji = lastResult.verdict === "DANGER" ? "🚨" : (lastResult.verdict === "CAUTION" ? "⚠️" : "✅");
+            const summary = currentLang === "hi" ? lastResult.summaryHi : lastResult.summaryEn;
+            const snippetShort = (lastResult.snippet || "").slice(0, 110) + ((lastResult.snippet || "").length > 110 ? "..." : "");
+
+            return `${emoji} *ScamShield India Alert*\n` +
+                `*Status:* ${lastResult.verdict} (${lastResult.riskScore}% Risk)\n` +
+                `*Category:* ${lastResult.scamType}\n\n` +
+                `*Checked:* "${snippetShort}"\n\n` +
+                `*Warning:* ${summary}\n\n` +
+                `📞 Cyber Fraud hone par turant *1930* call karein ya *cybercrime.gov.in* par report karein. Savdhan rahein! 🛡️`;
+        }
+
+        whatsappShareBtn.addEventListener("click", () => {
+            const msg = buildShareWarningText();
+            if (!msg) return;
+            const waUrl = `https://wa.me/?text=${encodeURIComponent(msg)}`;
+            window.open(waUrl, "_blank", "noopener,noreferrer");
+            copyTextToClipboard(msg);
+            showToast("WhatsApp share open ho raha hai (Alert text copy bhi ho gaya)!", "📲");
+        });
+
+        copyAlertBtn.addEventListener("click", () => {
+            const msg = buildShareWarningText();
+            if (!msg) return;
+            const ok = copyTextToClipboard(msg);
+            showToast(ok ? "Family warning alert clipboard me copy ho gaya!" : "Copy failed.", ok ? "📋" : "⚠️");
+        });
+
+        // ============================================================
+        // LOCAL SCAN HISTORY (LAST 8 SCANS IN LOCALSTORAGE)
+        // ============================================================
+        function loadHistory() {
+            try {
+                const raw = localStorage.getItem(HISTORY_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveScanToHistory(resultObj) {
+            try {
+                const history = loadHistory();
+                const entry = {
+                    id: Date.now(),
+                    timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) + " • " + new Date().toLocaleDateString([], { day: "2-digit", month: "short" }),
+                    mode: resultObj.mode,
+                    snippet: (resultObj.snippet || "").slice(0, 95),
+                    result: resultObj
+                };
+                history.unshift(entry);
+                const trimmed = history.slice(0, 8);
+                localStorage.setItem(HISTORY_KEY, JSON.stringify(trimmed));
+                renderHistory();
+            } catch (e) {
+                // Ignore localStorage quota or sandbox errors
+            }
+        }
+
+        function renderHistory() {
+            const history = loadHistory();
+            if (!history.length) {
+                historyList.innerHTML = `
+                    <div class="text-center py-6 px-4 rounded-2xl bg-slate-950/50 border border-dashed border-slate-800 text-xs sm:text-sm text-slate-400">
+                        Abhi tak koi scan nahi kiya gaya hai. Upar koi message ya demo chip scan karke dekhein!
+                    </div>
+                `;
+                return;
+            }
+
+            historyList.innerHTML = history.map((item, idx) => {
+                const modeIcon = item.mode === "link" ? "🔗" : (item.mode === "screenshot" ? "📸" : "💬");
+                const v = item.result.verdict;
+                const badgeClass = v === "DANGER"
+                    ? "bg-red-500/20 text-red-300 border-red-500/40"
+                    : (v === "CAUTION" ? "bg-amber-500/20 text-amber-300 border-amber-500/40" : "bg-emerald-500/20 text-emerald-300 border-emerald-500/40");
+
+                return `
+                    <button
+                        type="button"
+                        data-history-idx="${idx}"
+                        class="history-item w-full text-left flex items-center justify-between gap-3 bg-slate-950/65 hover:bg-slate-900/90 border border-slate-800 hover:border-sky-500/40 rounded-2xl px-3.5 py-3 transition-all cursor-pointer"
+                    >
+                        <div class="flex items-start gap-2.5 min-w-0">
+                            <span class="text-lg shrink-0 mt-0.5">${modeIcon}</span>
+                            <div class="min-w-0">
+                                <p class="text-xs sm:text-sm font-semibold text-slate-100 truncate">
+                                    ${escapeHtml(item.snippet || item.result.scamType)}
+                                </p>
+                                <p class="text-[11px] text-slate-400 mt-0.5">
+                                    ${escapeHtml(item.result.scamType)} &middot; ${escapeHtml(item.timestamp)}
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <span class="text-xs font-extrabold px-2.5 py-1 rounded-full border ${badgeClass}">
+                                ${v} ${item.result.riskScore}%
+                            </span>
+                        </div>
+                    </button>
+                `;
+            }).join("");
+
+            // Allow tapping any past scan to view its full report again
+            document.querySelectorAll(".history-item").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const idx = Number(btn.dataset.historyIdx);
+                    const items = loadHistory();
+                    if (items[idx] && items[idx].result) {
+                        lastResult = items[idx].result;
+                        renderResultCard(lastResult, true);
+                        showToast("Saved scan report loaded!", "🕒");
+                    }
+                });
+            });
+        }
+
+        clearHistoryBtn.addEventListener("click", () => {
+            try {
+                localStorage.removeItem(HISTORY_KEY);
+            } catch (e) {}
+            renderHistory();
+            showToast("Scan history cleared.", "🗑️");
+        });
+
+        // ============================================================
+        // 1930 CYBERCRIME HELPLINE MODAL CONTROLS
+        // ============================================================
+        function openHelplineModal() {
+            helplineModal.classList.remove("hidden");
+            helplineModal.classList.add("flex");
+        }
+
+        function closeHelplineModal() {
+            helplineModal.classList.add("hidden");
+            helplineModal.classList.remove("flex");
+        }
+
+        helplineOpenBtn.addEventListener("click", openHelplineModal);
+        bannerGuideBtn.addEventListener("click", openHelplineModal);
+        helplineCloseBtn.addEventListener("click", closeHelplineModal);
+        helplineModal.addEventListener("click", (e) => {
+            if (e.target === helplineModal) closeHelplineModal();
+        });
+
+        copy1930Btn.addEventListener("click", () => {
+            const ok = copyTextToClipboard("1930");
+            showToast(ok ? "1930 Helpline number copied!" : "Could not copy.", "📞");
+        });
+
+        // ============================================================
+        // INITIALIZATION
+        // ============================================================
+        window.onload = function () {
+            renderHistory();
+            if ("speechSynthesis" in window) {
+                window.speechSynthesis.getVoices(); // Pre-warm voices list
+            }
+        };
+    </script>
+</body>
+</html>
